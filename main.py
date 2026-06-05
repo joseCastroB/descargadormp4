@@ -20,13 +20,13 @@ async def download_video(request: VideoRequest):
     # Plantilla del nombre del archivo: Título del video . extensión
     outtmpl = os.path.join(downloads_path, "%(title)s.%(ext)s")
 
-    # Configuración de yt-dlp para obtener la mejor calidad y forzar MP4
+    # Configuración de yt-dlp para obtener H.264 (Universal) y forzar MP4
     ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        'format': 'bestvideo[ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': outtmpl,
         'merge_output_format': 'mp4',
-        'noplaylist': True, # Descarga solo un video, no la playlist entera
-        'quiet': False      # Muestra el progreso en la consola de la terminal
+        'noplaylist': True,
+        'quiet': False
     }
 
     try:
