@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador Local de YouTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center h-screen font-sans">
+    
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-slate-200">
+        <div class="flex justify-center mb-4">
+            <svg class="w-12 h-12 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+        </div>
+        
+        <h1 class="text-2xl font-bold mb-2 text-center text-slate-800">Descargador MP4</h1>
+        <p class="text-slate-500 text-sm text-center mb-6">Guarda videos en máxima calidad directo a tu disco duro.</p>
+        
+        <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." 
+               class="w-full p-3 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition">
+        
+        <button id="downloadBtn" 
+                class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 active:bg-red-800 transition shadow-md">
+            Descargar Video
+        </button>
+        
+        <div id="statusContainer" class="mt-4 p-3 rounded-lg text-center text-sm hidden">
+            <p id="statusText" class="font-medium"></p>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('downloadBtn');
+        const input = document.getElementById('urlInput');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusText = document.getElementById('statusText');
+
+        btn.addEventListener('click', async () => {
+            const url = input.value.trim();
+            if (!url) {
+                alert('Por favor ingresa un enlace válido.');
+                return;
+            }
+
+            // Cambiar la UI a estado de carga
+            btn.disabled = true;
+            btn.innerHTML = 'Procesando... revisa la terminal ⏳';
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            statusContainer.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            statusContainer.classList.add('bg-blue-100', 'text-blue-700');
+            statusText.innerText = 'Extrayendo datos y uniendo video/audio. Esto tomará un momento dependiendo de tu internet.';
+
+            try {
+                // Enviar la URL a nuestro backend local en Python
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.detail || 'Error desconocido');
+
+                // Éxito
+                statusContainer.classList.replace('bg-blue-100', 'bg-green-100');
+                statusContainer.classList.replace('text-blue-700', 'text-green-700');
+                statusText.innerText = data.message;
+                input.value = ''; // Limpiar el campo
+
+            } catch (error) {
+                // Error
+                statusContainer.classList.replace('bg-blue-100', 'bg-red-100');
+                statusContainer.classList.replace('text-blue-700', 'text-red-700');
+                statusText.innerText = 'Error: ' + error.message;
+            } finally {
+                // Restaurar el botón
+                btn.disabled = false;
+                btn.innerHTML = 'Descargar Video';
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>
